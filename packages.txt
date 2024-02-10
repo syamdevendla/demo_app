@@ -1,0 +1,5 @@
+libcairo2-dev
+libgirepository1.0-dev
+portaudio19-dev
+python3-pyaudio
+ffmpeg

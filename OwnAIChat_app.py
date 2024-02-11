@@ -111,9 +111,9 @@ if submit_uploaded_files and uploaded_files is not None:
 
 
 def init_stream_lit():
-    if st.session_state[RELOAD_AGENT_REQUIRED]:
-        st.cache_resource.clear()
-        st.session_state[RELOAD_AGENT_REQUIRED] = False
+    # if st.session_state[RELOAD_AGENT_REQUIRED]:
+    # st.cache_resource.clear()
+    # st.session_state[RELOAD_AGENT_REQUIRED] = False
 
     # agent_executor: AgentExecutor = prepare_agent()
 
@@ -155,7 +155,7 @@ def init_stream_lit():
                     question_placeholder = st.empty()
                     player_placeholder = st.empty()
                     res_placeholder = st.empty()
-
+                    query_output = {}
                     if st.session_state[USER_SELECTED_LANGUAGE] != "english":
                         input_question_translated_to_eng = speech_text.translate_to_english(
                             st.session_state[USER_QUESTION], st.session_state[USER_SELECTED_LANGUAGE])
@@ -169,26 +169,38 @@ def init_stream_lit():
                     else:
                         question_placeholder.write(f":red[Q: {st.session_state[USER_QUESTION]}]")
                         # query = "whats the website mentioned to Get a quote for the completion of  template "
-                        st.session_state[AI_RESPONSE] = prepare_agent().execute_query(input_question_translated_to_eng)
+                        query_output = prepare_agent().execute_query(input_question_translated_to_eng, 1)
+                        st.session_state[AI_RESPONSE] = query_output["answer"]
                         if not st.session_state[AI_RESPONSE]:
                             st.session_state[AI_RESPONSE] = "No response, possible reason: server down"
 
-                        if st.session_state[USER_SELECTED_LANGUAGE] != 'english':
+                        if st.session_state[AI_RESPONSE] and st.session_state[USER_SELECTED_LANGUAGE] != 'english':
                             output_translations = speech_text.translate_eng_to_selected_lang(
                                 st.session_state[AI_RESPONSE], st.session_state[USER_SELECTED_LANGUAGE])
                             st.session_state[AI_RESPONSE] = output_translations
 
                         res_placeholder.write("🔥 :green[Own-AI : ]" f":green[{st.session_state[AI_RESPONSE]}]")
-                    if st.session_state[USER_QUESTION]:
+                    if st.session_state[AI_RESPONSE] and st.session_state[USER_QUESTION]:
                         audio_out_file = speech_text.output_text_to_speak(st.session_state[AI_RESPONSE],
                                                                           st.session_state[USER_SELECTED_LANGUAGE])
                         player_placeholder.audio(audio_out_file)
                         os.remove(audio_out_file)
+                        # Display images
+                        cols = st.columns((1, 1))
+                        image_paths = query_output["page_img"]
+
+                        print("image_paths count: ", len(image_paths))
+                        for i, image_path in enumerate(image_paths):
+                            # image_path = "data_backup/".join(images)
+                            if os.path.isfile(image_path):
+                                cols[i % 2].image(image_path, clamp=True)
+
+                        page_nums = query_output["page_num"]
 
                         st.session_state[QUESTION_HISTORY].append(
                             (st.session_state[USER_QUESTION], st.session_state[AI_RESPONSE]))
-                        st.session_state[USER_QUESTION] = ""
-                        st.session_state[AI_RESPONSE] = ""
+                    st.session_state[USER_QUESTION] = ""
+                    st.session_state[AI_RESPONSE] = ""
 
                 except Exception as e:
                     st.error(f"Error occurred: {e}")

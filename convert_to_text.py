@@ -82,17 +82,18 @@ class TokenizerAndAgent:
 
                 text = self.ocr_model([batch["page_content"]])
 
-                img_pdf = text.pages[0].synthesize()
+                # img_pdf: np.ndarray = text.pages[0].synthesize()
                 # size = text.pages[0].synthesize().size
                 # new_image = Image.new(img_pdf, ((1440, 900), (255, 255, 255)))
                 # img = Image(img_pdf, clamp=True)
-                # img = Image.fromarray(batch["page_content"], mode="L")
+                # , mode="L"
+                img = Image.fromarray(np.array(batch["page_content"]))
                 sourcefile = str(batch["source"])[:-4]
                 current_datetime = str(datetime.now().strftime("%Y%m%d-%H%M%S%f"))
                 image_file_name = sourcefile + "_" + current_datetime + ".jpg"
                 path_to_save_image = "data_backup/" + image_file_name
                 print("path_to_save_image :", path_to_save_image)
-                # new_image.save(path_to_save_image)
+                img.save(path_to_save_image)
 
                 text_splitter = RecursiveCharacterTextSplitter(chunk_size=300, chunk_overlap=50)
 
@@ -105,7 +106,7 @@ class TokenizerAndAgent:
                     print("pdf page: ", chunk.page_content)
 
                 return [{"text": chunk.page_content, "source": batch["source"],
-                         "page_number": batch["page_number"], "page_image": image_file_name}
+                         "page_number": batch["page_number"], "page_image": path_to_save_image}
                         for chunk in chunks]
 
         class ExtractImageText:

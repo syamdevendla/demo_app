@@ -191,7 +191,7 @@ def init_stream_lit():
 
                         print("image_paths count: ", len(image_paths))
                         for i, image_path in enumerate(image_paths):
-                            # image_path = "data_backup/".join(images)
+                            # image_path = "data_backup/"+image_path
                             if os.path.isfile(image_path):
                                 cols[i % 2].image(image_path, clamp=True)
 
